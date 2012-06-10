@@ -1,11 +1,16 @@
-# TODO(sissel): Make 'try' a class?
-#   Would be useful to swap out the 'failed' message code (instead of puts, use
-#      a logger).
-#   Would be useful to swap out the 'sleep' call; instead of sleeping, one
-#     might want to block until some event occurs (or not sleep at all for
-#     tests).
-#
 module Stud
+
+  # A class implementing 'retry-on-failure'
+  #
+  # Example:
+  #
+  #     Try.new.try(5.times) { your_code }
+  #
+  # A failure is indicated by any exception being raised.
+  # On success, the return value of the block is the return value of the try
+  # call.
+  #
+  # On final failure (ran out of things to try), the last exception is raised.
   class Try
     # An infinite enumerator
     class Forever
@@ -14,7 +19,9 @@ module Stud
         a = 0
         yield a += 1 while true
       end
-    end
+    end # class Forever
+
+    FOREVER = Forever.new
 
     BACKOFF_SCHEDULE = [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.0]
 
@@ -62,7 +69,7 @@ module Stud
     #
     #   # Try forever
     #   return_value = try { ... }
-    def try(enumerable=Forever, &block)
+    def try(enumerable=FOREVER, &block)
       if block.arity == 0
         # If the block takes no arguments, give none
         procedure = lambda { |val| block.call }
@@ -104,6 +111,7 @@ module Stud
   end # class Stud::Try
 
   TRY = Try.new
+  # A simple try method for the common case.
   def try(enumerable=Stud::Try::Forever, &block)
     return TRY.try(enumerable, &block)
   end # def try
