@@ -6,77 +6,106 @@
 #     tests).
 #
 module Stud
-  # Public: try a block of code until either it succeeds or we give up.
-  #
-  # enumerable - an Enumerable or omitted, #each is invoked and is tried that
-  #   number of times. If this value is omitted or nil, we will try until
-  #   success with no limit on the number of tries.
-  #
-  # Returns the return value of the block once the block succeeds.
-  # Raises the last seen exception if we run out of tries.
-  #
-  # Examples
-  #
-  #   # Try 10 times to fetch http://google.com/
-  #   response = try(10.times) { Net::HTTP.get_response("google.com", "/") }
-  #
-  #   # Try many times, yielding the value of the enumeration to the block.
-  #   # This allows you to try different inputs.
-  #   response = try([0, 2, 4, 6]) { |val| 50 / val }
-  #   
-  #   Output: 
-  #   Failed (divided by 0). Retrying in 0.01 seconds...
-  #   => 25
-  #
-  #   # Try forever
-  #   return_value = try { ... }
-  def try(enumerable=nil, &block)
-    if block.arity == 0
-      # If the block takes no arguments, give none
-      procedure = lambda { |val| block.call }
-    else
-      # Otherwise, pass the current 'enumerable' value to the block.
-      procedure = lambda { |val| block.call(val) }
-    end
-
-    last_exception = nil
-
-    # Retry after a sleep to be nice.
-    backoff = 0.01
-    backoff_max = 2.0
-
-    # Try forever if enumerable is nil.
-    if enumerable.nil?
-      enumerable = Enumerator.new do |y| 
+  class Try
+    # An infinite enumerator
+    class Forever
+      include Enumerable
+      def each(&block)
         a = 0
-        while true
-          a += 1
-          y << a
+        yield a += 1 while true
+      end
+    end
+
+    BACKOFF_SCHEDULE = [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.0]
+
+    # Log a failure.
+    #
+    # You should override this method if you want a better logger.
+    def log_failure(exception, fail_count, message)
+      puts "Failed (#{exception}). #{message}"
+    end # def log_failure
+
+    # This method is called when a try attempt fails.
+    #
+    # The default implementation will sleep with exponential backoff up to a
+    # maximum of 2 seconds (see BACKOFF_SCHEDULE)
+    #
+    # exception - the exception causing the failure
+    # fail_count - how many times we have failed.
+    def failure(exception, fail_count)
+      backoff = BACKOFF_SCHEDULE[fail_count] || BACKOFF_SCHEDULE.last
+      log_failure(exception, fail_count, "Sleeping for #{backoff}")
+      sleep(backoff)
+    end # def failure
+
+    # Public: try a block of code until either it succeeds or we give up.
+    #
+    # enumerable - an Enumerable or omitted/nil, #each is invoked and is tried
+    #   that number of times. If this value is omitted or nil, we will try until
+    #   success with no limit on the number of tries.
+    #
+    # Returns the return value of the block once the block succeeds.
+    # Raises the last seen exception if we run out of tries.
+    #
+    # Examples
+    #
+    #   # Try 10 times to fetch http://google.com/
+    #   response = try(10.times) { Net::HTTP.get_response("google.com", "/") }
+    #
+    #   # Try many times, yielding the value of the enumeration to the block.
+    #   # This allows you to try different inputs.
+    #   response = try([0, 2, 4, 6]) { |val| 50 / val }
+    #   
+    #   Output: 
+    #   Failed (divided by 0). Retrying in 0.01 seconds...
+    #   => 25
+    #
+    #   # Try forever
+    #   return_value = try { ... }
+    def try(enumerable=Forever, &block)
+      if block.arity == 0
+        # If the block takes no arguments, give none
+        procedure = lambda { |val| block.call }
+      else
+        # Otherwise, pass the current 'enumerable' value to the block.
+        procedure = lambda { |val| block.call(val) }
+      end
+
+      # Track the last exception so we can reraise it on failure.
+      last_exception = nil
+
+      # When 'enumerable' runs out of things, if we still haven't succeeded,
+      # we'll reraise
+      fail_count = 0
+      enumerable.each do |val|
+        begin
+          # If the 'procedure' (the block, really) succeeds, we'll break 
+          # and return the return value of the block. Win!
+          return procedure.call(val)
+        rescue => exception
+          last_exception = exception
+          fail_count += 1
+
+          # Note: Since we can't reliably detect the 'end' of an enumeration, we
+          # will call 'failure' for the final iteration (if it failed) and sleep
+          # even though there's no strong reason to backoff on the last error.
+          failure(exception, fail_count)
         end
-      end
-    end
+      end # enumerable.each
 
-    # When 'enumerable' runs out of things, if we still haven't succeeded, we'll
-    # reraise
-    enumerable.each do |val|
-      begin
-        # If the 'procedure' (the block, really) succeeds, we'll break 
-        # and return the return value of the block. Win!
-        return procedure.call(val)
-      rescue => e
-        puts "Failed (#{e}). Retrying in #{backoff} seconds..."
-        last_exception = e
+      # generally make the exception appear from the 'try' method itself, not from
+      # any deeply nested enumeration/begin/etc
+      # It is my hope that this makes the backtraces easier to read, not more
+      # difficult. If you find this is not the case, please please please let me
+      # know.
+      last_exception.set_backtrace(StandardError.new.backtrace)
+      raise last_exception
+    end # def try
+  end # class Stud::Try
 
-        # Exponential backoff
-        sleep(backoff)
-        backoff = [backoff * 2, backoff_max].min unless backoff == backoff_max
-      end
-    end
-
-    # generally make the exception appear from the 'try' method itself, not from
-    # any deeply nested enumeration/begin/etc
-    last_exception.set_backtrace(StandardError.new.backtrace)
-    raise last_exception
+  TRY = Try.new
+  def try(enumerable=Stud::Try::Forever, &block)
+    return TRY.try(enumerable, &block)
   end # def try
 
   extend self
