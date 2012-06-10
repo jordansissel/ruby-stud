@@ -1,9 +1,8 @@
 # Stud.
 
-I've complained for a long time that ruby's stdlib is pretty bad. 
-
-It's missing tons of things I do all the time, like retrying on a failure,
-supervising workers, resource pools, etc.
+Ruby's stdlib is missing many things I use to solve most of my software
+problems. Things like like retrying on a failure, supervising workers, resource
+pools, etc.
 
 In general, I started exploring solutions to these things in code over in my
 [software-patterns](https://github.com/jordansissel/software-patterns) repo.
