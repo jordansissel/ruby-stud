@@ -45,6 +45,17 @@ describe Stud::Try do
     insist { count } == total
   end
 
+  it "should appear to try forever by default" do
+    # This is really the 'halting problem' but if we 
+    # try enough times, consider that it is likely to continue forever.
+    count = 0
+    value = subject.try do
+      count += 1
+      raise FakeFailure if count < 1000
+    end
+    insist { count } == 1000
+  end
+
   it "should return the block return value on success" do
     insist { subject.try(1.times) { 42 } } == 42
   end
