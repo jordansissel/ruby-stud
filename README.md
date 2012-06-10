@@ -20,3 +20,9 @@ each 'pattern' are quite small by code size.
 * supervising tasks
 * tasks (threads that can return values, exceptions, etc)
 * interval execution (do X every N seconds)
+
+## TODO:
+
+* Make sure all things are documented. rubydoc.info should be able to clearly
+  show folks how to use features of this library.
+* Add tests to cover all supported features.
