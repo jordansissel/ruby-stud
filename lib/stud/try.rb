@@ -1,3 +1,10 @@
+# TODO(sissel): Make 'try' a class?
+#   Would be useful to swap out the 'failed' message code (instead of puts, use
+#      a logger).
+#   Would be useful to swap out the 'sleep' call; instead of sleeping, one
+#     might want to block until some event occurs (or not sleep at all for
+#     tests).
+#
 module Stud
   # Public: try a block of code until either it succeeds or we give up.
   #
