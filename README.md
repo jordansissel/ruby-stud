@@ -14,11 +14,10 @@ each 'pattern' are quite small by code size.
 
 ## Features
 
-* retry on failure, with back-off, where failure is any exception.
-* generic resource pools
-* supervising tasks
-* tasks (threads that can return values, exceptions, etc)
-* interval execution (do X every N seconds)
+* {Stud::Try} (and {Stud.try}) - retry on failure, with back-off, where failure is any exception.
+* {Stud::Pool} - generic resource pools
+* {Stud::Task} - tasks (threads that can return values, exceptions, etc)
+* {Stud.interval} - interval execution (do X every N seconds)
 
 ## TODO:
 
