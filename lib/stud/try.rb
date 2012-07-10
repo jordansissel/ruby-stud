@@ -72,10 +72,10 @@ module Stud
     def try(enumerable=FOREVER, &block)
       if block.arity == 0
         # If the block takes no arguments, give none
-        procedure = lambda { |val| block.call }
+        procedure = lambda { |val| return block.call }
       else
         # Otherwise, pass the current 'enumerable' value to the block.
-        procedure = lambda { |val| block.call(val) }
+        procedure = lambda { |val| return block.call(val) }
       end
 
       # Track the last exception so we can reraise it on failure.
@@ -89,6 +89,9 @@ module Stud
           # If the 'procedure' (the block, really) succeeds, we'll break 
           # and return the return value of the block. Win!
           return procedure.call(val)
+        rescue NoMethodError, NameError
+          # Abort immediately on exceptions that are unlikely to recover.
+          raise
         rescue => exception
           last_exception = exception
           fail_count += 1
@@ -112,7 +115,7 @@ module Stud
 
   TRY = Try.new
   # A simple try method for the common case.
-  def try(enumerable=Stud::Try::Forever, &block)
+  def try(enumerable=Stud::Try::FOREVER, &block)
     return TRY.try(enumerable, &block)
   end # def try
 
