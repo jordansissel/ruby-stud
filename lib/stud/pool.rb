@@ -210,6 +210,6 @@ module Stud
       end
     end # def release
 
-    public(:add, :remove, :fetch, :release, :sized?, :count)
+    public(:add, :remove, :fetch, :release, :sized?, :count, :initialize)
   end # class Pool
 end # module Stud
