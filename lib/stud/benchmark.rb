@@ -110,7 +110,7 @@ module Stud
         puts sorted.collect { |lower_bound, count|
           #puts lower_bound
           percent = (count / Float(total))
-          "%30s: %s" % [lower_bound, (TICKS.last * (50 * percent).ceil)]
+          "%40s: %s" % [lower_bound, (TICKS.last * (50 * percent).ceil)]
         }.join("\n")
 
       end # def pretty_print
