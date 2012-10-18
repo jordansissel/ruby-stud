@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name = "stud"
-  spec.version = "0.0.5"
+  spec.version = "0.0.6"
   spec.summary = "stud - common code techniques"
   spec.description = "small reusable bits of code I'm tired of writing over " \
     "and over. A library form of my software-patterns github repo."
