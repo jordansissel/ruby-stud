@@ -7,7 +7,11 @@ module Stud
       previous_trap = Signal::trap(signal) { simulate_signal(signal) }
       # If there was a previous trap (via Kernel#trap) set, make sure we remember it.
       if previous_trap.is_a?(Proc)
-        @traps[signal] << previous_trap
+        # MRI's default traps are "DEFAULT" string
+        # JRuby's default traps are Procs with a source_location of "(internal")
+        if RUBY_ENGINE != "jruby" || previous_trap.source_location.first != "(internal)"
+          @traps[signal] << previous_trap
+        end
       end
 
       @trapped = true
