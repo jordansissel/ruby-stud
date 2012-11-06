@@ -1,9 +1,9 @@
 module Stud
   def self.trap(signal, &block)
     @traps ||= Hash.new { |h,k| h[k] = [] }
-    @traps[signal] << block
 
-    if !@trapped
+    if !@traps.include?(signal)
+      # First trap call for this signal, tell ruby to invoke us.
       previous_trap = Signal::trap(signal) { simulate_signal(signal) }
       # If there was a previous trap (via Kernel#trap) set, make sure we remember it.
       if previous_trap.is_a?(Proc)
@@ -13,12 +13,13 @@ module Stud
           @traps[signal] << previous_trap
         end
       end
-
-      @trapped = true
     end
+
+    @traps[signal] << block
   end
 
   def self.simulate_signal(signal)
+    puts "Simulate: #{signal}"
     @traps[signal].each(&:call)
   end
 end
