@@ -5,7 +5,7 @@ module Stud
   #
   # The execution patterns of this method should be that 
   # the start time of 'block.call' should always be at time T*interval
-  def interval(time, &block)
+  def self.interval(time, &block)
     start = Time.now
     while true
       block.call
@@ -19,5 +19,9 @@ module Stud
         start = Time.now
       end
     end # loop forever
+  end # def interval
+  
+  def interval(time, &block)
+    return Stud.interval(time, &block)
   end # def interval
 end # module Stud
