@@ -19,7 +19,7 @@ module Stud
   end
 
   def self.simulate_signal(signal)
-    puts "Simulate: #{signal}"
+    puts "Simulate: #{signal} w/ #{@traps[signal].count} callbacks"
     @traps[signal].each(&:call)
   end
 end
