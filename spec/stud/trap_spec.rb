@@ -6,10 +6,11 @@ class FakeFailure < StandardError; end
 describe "Stud#trap" do
   it "should call multiple traps for a single signal" do
     count = 0
-    Stud.trap("INT") { count += 1 }
-    Stud.trap("INT") { count += 2 }
-    Stud.trap("INT") { count += 3 }
-    Process.kill("INT", Process.pid)
+    Stud.trap("USR1") { puts "USR1"; count += 1 }
+    Stud.trap("USR1") { puts "USR2"; count += 2 }
+    Stud.trap("USR1") { puts "USR3"; count += 3 }
+    Process.kill("USR1", Process.pid)
+    sleep(0.5)
     insist { count } == 6
   end
 
