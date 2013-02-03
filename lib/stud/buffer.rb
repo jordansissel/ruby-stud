@@ -40,7 +40,6 @@ module Stud
 
       # events we've accumulated
       buffer_clear_pending
-
     end
 
     def buffer_clear_pending
@@ -75,6 +74,10 @@ module Stud
       buffer_flush
     end
 
+    # try to flush events
+    # return immediately if we fail to get lock (another flush is in progress)
+    #   unless called with :final => true. In that case, wait for a lock.
+    # returns the number of items flushed successfully
     def buffer_flush(options={})
       force = options[:force] || options[:final]
       final = options[:final]
@@ -83,14 +86,14 @@ module Stud
       if options[:final]
         @buffer_state[:flush_mutex].lock
       elsif ! @buffer_state[:flush_mutex].try_lock # failed to get lock, another flush already in progress
-        return
+        return 0
       end
 
       begin
         time_since_last_flush = Time.now.to_i - @buffer_state[:last_flush]
 
-        return if @buffer_state[:pending_count] == 0
-        return if (!force) &&
+        return 0 if @buffer_state[:pending_count] == 0
+        return 0 if (!force) &&
            (@buffer_state[:pending_count] < @buffer_config[:max_items]) &&
            (time_since_last_flush < @buffer_config[:max_interval])
 
@@ -109,11 +112,20 @@ module Stud
           :final => final
         ) if @buffer_config[:logger]
 
+        items_flushed = 0
         @buffer_state[:outgoing_items].each do |group, events|
           begin
-            group.nil? ? flush(events) : flush(events, group)
+            if group.nil?
+              flush(events)
+            else
+              flush(events, group)
+            end
+
             @buffer_state[:outgoing_items].delete(group)
-            @buffer_state[:outgoing_count] -= events.size
+            events_size = events.size
+            @buffer_state[:outgoing_count] -= events_size
+            items_flushed += events_size
+
           rescue => e
             raise e
             @buffer_config[:logger].warn("Failed to flush outgoing items",
@@ -122,7 +134,7 @@ module Stud
               :backtrace => e.backtrace
             ) if @buffer_config[:logger]
 
-            if
+            if @buffer_config[:has_on_flush_error]
               on_flush_error e
             end
 
@@ -135,6 +147,8 @@ module Stud
       ensure
         @buffer_state[:flush_mutex].unlock
       end
+
+      items_flushed
     end
   end
 end
