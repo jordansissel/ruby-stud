@@ -224,7 +224,7 @@ module Stud
             items_flushed += events_size
 
           rescue => e
-            raise e
+
             @buffer_config[:logger].warn("Failed to flush outgoing items",
               :outgoing_count => @buffer_state[:outgoing_count],
               :exception => e,
