@@ -62,6 +62,7 @@ module Stud
   # accumulated messages are flushed.
   module Buffer
 
+    public
     # Initialize the buffer.
     #
     # Call directly from your constructor if you wish to set some non-default
@@ -247,12 +248,11 @@ module Stud
 
       items_flushed
     end
-  end
 
-  private
-
-  def buffer_clear_pending
-    @buffer_state[:pending_items] = Hash.new { |h, k| h[k] = [] }
-    @buffer_state[:pending_count] = 0
+    private
+    def buffer_clear_pending
+      @buffer_state[:pending_items] = Hash.new { |h, k| h[k] = [] }
+      @buffer_state[:pending_count] = 0
+    end
   end
 end
