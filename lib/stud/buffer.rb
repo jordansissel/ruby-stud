@@ -1,5 +1,7 @@
 module Stud
 
+  # @author {Alex Dean}[http://github.com/alexdean]
+  #
   # Implements a generic framework for accepting events which are later flushed
   # in batches. Flushing occurrs whenever +:max_items+ or +:max_interval+ (seconds)
   # has been reached.
