@@ -10,20 +10,26 @@ module Stud
   module Benchmark
     def self.run(iterations=1, &block)
       timer = Metriks::Timer.new
+      start = Time.now
       iterations.times { timer.time(&block) }
-      return Results.new(timer)
+      duration = Time.now - start
+      return Results.new(timer, duration)
     end # def run
 
     def self.runtimed(seconds=10, &block)
       timer = Metriks::Timer.new
       expiration = Time.now + seconds
+
+      start = Time.now
       timer.time(&block) while Time.now < expiration
-      return Results.new(timer)
+      duration = Time.now - start
+      return Results.new(timer, duration)
     end # def runtimed
 
     def self.cputimed(seconds=10, &block)
       timer = Metriks::Timer.new
       expiration = Time.now + seconds
+      start_usage = Stud::Benchmark::RUsage.get
       while Time.now < expiration
         start = Stud::Benchmark::RUsage.get
         block.call
@@ -31,7 +37,10 @@ module Stud
         cputime = (finish.user + finish.system) - (start.user + start.system)
         timer.update(cputime)
       end # while not expired
-      return Results.new(timer)
+      finish_usage = Stud::Benchmark::RUsage.get
+      duration = (finish_usage.user + finish_usage.system) \
+        - (start_usage.user + start_usage.system)
+      return Results.new(timer, duration)
     end # self.cpu
 
     class Results
@@ -53,8 +62,9 @@ module Stud
         #tick
       #end.flatten
 
-      def initialize(data)
+      def initialize(data, duration)
         @data = data
+        @duration = duration
       end # def initialize
 
       def environment
@@ -77,6 +87,10 @@ module Stud
 
       def max
         return @data.max
+      end
+
+      def rate
+        return @data.count / @duration
       end
 
       def mean
