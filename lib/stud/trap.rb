@@ -1,4 +1,23 @@
 module Stud
+  # Bind a block to be called when a certain signal is received.
+  #
+  # Same arguments to Signal::trap.
+  #
+  # The behavior of this method is different than Signal::trap because
+  # multiple handlers can request notification for the same signal.
+  #
+  # For example, this is valid:
+  #
+  #     Stud.trap("INT") { puts "Hello" }
+  #     Stud.trap("INT") { puts "World" }
+  #
+  # When SIGINT is received, both callbacks will be invoked, in order.
+  #
+  # This helps avoid the situation where a library traps a signal outside of
+  # your control.
+  #
+  # If something has already used Signal::trap, that callback will be saved
+  # and scheduled the same way as any other Stud::trap.
   def self.trap(signal, &block)
     @traps ||= Hash.new { |h,k| h[k] = [] }
 
@@ -16,13 +35,25 @@ module Stud
     end
 
     @traps[signal] << block
-  end
 
+    return block.id
+  end # def self.trap
+
+  # Simulate a signal. This lets you force an interrupt without
+  # sending a signal to yourself.
   def self.simulate_signal(signal)
-    puts "Simulate: #{signal} w/ #{@traps[signal].count} callbacks"
+    #puts "Simulate: #{signal} w/ #{@traps[signal].count} callbacks"
     @traps[signal].each(&:call)
-  end
-end
+  end # def self.simulate_signal
+
+  # Remove a previously set signal trap.
+  #
+  # 'signal' is the name of the signal ("INT", etc)
+  # 'id' is the value returned by a previous Stud.trap() call
+  def self.untrap(signal, id)
+    @traps[signal].delete_if { |block| block.id == id }
+  end # def self.untrap
+end # module Studd
 
 # Monkey-patch the main 'trap' stuff? This could be useful.
 #module Signal
