@@ -36,7 +36,7 @@ module Stud
 
     @traps[signal] << block
 
-    return block.id
+    return block.object_id
   end # def self.trap
 
   # Simulate a signal. This lets you force an interrupt without
@@ -51,9 +51,9 @@ module Stud
   # 'signal' is the name of the signal ("INT", etc)
   # 'id' is the value returned by a previous Stud.trap() call
   def self.untrap(signal, id)
-    @traps[signal].delete_if { |block| block.id == id }
+    @traps[signal].delete_if { |block| block.object_id == id }
   end # def self.untrap
-end # module Studd
+end # module Stud
 
 # Monkey-patch the main 'trap' stuff? This could be useful.
 #module Signal
