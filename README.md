@@ -18,6 +18,7 @@ each 'pattern' are quite small by code size.
 * {Stud::Pool} - generic resource pools
 * {Stud::Task} - tasks (threads that can return values, exceptions, etc)
 * {Stud.interval} - interval execution (do X every N seconds)
+* {Stud::Buffer} - batch & flush behavior.
 
 ## TODO:
 
