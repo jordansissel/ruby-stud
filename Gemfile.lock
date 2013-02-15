@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    stud (0.0.1)
+    stud (0.0.7)
 
 GEM
   remote: http://rubygems.org/
