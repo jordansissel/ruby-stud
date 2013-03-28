@@ -216,9 +216,9 @@ module Stud
         @buffer_state[:outgoing_items].each do |group, events|
           begin
             if group.nil?
-              flush(events)
+              flush(events,final)
             else
-              flush(events, group)
+              flush(events, group, final)
             end
 
             @buffer_state[:outgoing_items].delete(group)
