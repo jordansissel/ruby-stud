@@ -1,4 +1,5 @@
 require "stud/buffer"
+require "stud/try"
 require "spec_env" # from the top level spec/ directory
 Thread.abort_on_exception = true
 
@@ -149,7 +150,7 @@ describe Stud::Buffer do
     it "should accept new items to pending list" do
       subject = BufferSubject.new(:max_items => 2)
 
-      subject.should_receive(:flush).with(['something', 'something else'])
+      subject.should_receive(:flush).with(['something', 'something else'], nil)
 
       subject.buffer_receive('something')
       subject.buffer_receive('something else')
@@ -159,8 +160,8 @@ describe Stud::Buffer do
       subject = BufferSubject.new(:max_items => 2)
 
       # we get 2 flush calls, one for each key
-      subject.should_receive(:flush).with(['something'], 'key1')
-      subject.should_receive(:flush).with(['something else'], 'key2')
+      subject.should_receive(:flush).with(['something'], 'key1', nil)
+      subject.should_receive(:flush).with(['something else'], 'key2', nil)
 
       subject.buffer_receive('something', 'key1')
       subject.buffer_receive('something else', 'key2')
@@ -169,8 +170,8 @@ describe Stud::Buffer do
     it "should accept non-string grouping keys" do
       subject = BufferSubject.new(:max_items => 2)
 
-      subject.should_receive(:flush).with(['something'], {:key => 1, :foo => :yes})
-      subject.should_receive(:flush).with(['something else'], {:key => 2, :foo => :no})
+      subject.should_receive(:flush).with(['something'], {:key => 1, :foo => :yes}, nil)
+      subject.should_receive(:flush).with(['something else'], {:key => 2, :foo => :no}, nil)
 
       subject.buffer_receive('something', :key => 1, :foo => :yes)
       subject.buffer_receive('something else', :key => 2, :foo => :no)
@@ -267,7 +268,7 @@ describe Stud::Buffer do
     it "flushes when time since last flush exceeds max_interval" do
       class AccumulatingBufferSubject < BufferSubject
         attr_reader :flushed
-        def flush(items)
+        def flush(items, final=false)
           @flushed = items
         end
       end
@@ -275,9 +276,9 @@ describe Stud::Buffer do
       subject = AccumulatingBufferSubject.new(:max_items => 5, :max_interval => 1)
       subject.buffer_receive('item!')
 
-      sleep 1.5
-
-      insist { subject.flushed } == ['item!']
+      Stud.try(10.times) do
+        insist { subject.flushed } == ['item!']
+      end
     end
   end
 end
