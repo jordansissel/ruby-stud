@@ -3,12 +3,12 @@ module Stud
   # @author {Alex Dean}[http://github.com/alexdean]
   #
   # Implements a generic framework for accepting events which are later flushed
-  # in batches. Flushing occurrs whenever +:max_items+ or +:max_interval+ (seconds)
+  # in batches. Flushing occurs whenever +:max_items+ or +:max_interval+ (seconds)
   # has been reached.
   #
-  # Including class must implement +flush+, which will be called with all accumulated
-  # items either when the output buffer fills (+:max_items+) or when a fixed amount
-  # of time (+:max_interval+) passes.
+  # Including class must implement +flush+, which will be called with all
+  # accumulated items either when the output buffer fills (+:max_items+) or
+  # when a fixed amount of time (+:max_interval+) passes.
   #
   # == batch_receive and flush
   # General receive/flush can be implemented in one of two ways.
@@ -59,9 +59,9 @@ module Stud
   # the moment.
   #
   # == final flush
-  # Including class should call <code>buffer_flush(:final => true)</code> during a teardown/
-  # shutdown routine (after the last call to buffer_receive) to ensure that all
-  # accumulated messages are flushed.
+  # Including class should call <code>buffer_flush(:final => true)</code>
+  # during a teardown/shutdown routine (after the last call to buffer_receive)
+  # to ensure that all accumulated messages are flushed.
   module Buffer
 
     public
@@ -105,7 +105,7 @@ module Stud
         :flush_mutex => Mutex.new,
 
         # data for timed flushes
-        :last_flush => Time.now.to_i,
+        :last_flush => Time.now,
         :timer => Thread.new do
           loop do
             sleep(@buffer_config[:max_interval])
@@ -191,7 +191,7 @@ module Stud
       items_flushed = 0
 
       begin
-        time_since_last_flush = Time.now.to_i - @buffer_state[:last_flush]
+        time_since_last_flush = (Time.now - @buffer_state[:last_flush])
 
         return 0 if @buffer_state[:pending_count] == 0
         return 0 if (!force) &&
@@ -241,14 +241,14 @@ module Stud
             sleep 1
             retry
           end
-          @buffer_state[:last_flush] = Time.now.to_i
+          @buffer_state[:last_flush] = Time.now
         end
 
       ensure
         @buffer_state[:flush_mutex].unlock
       end
 
-      items_flushed
+      return items_flushed
     end
 
     private
