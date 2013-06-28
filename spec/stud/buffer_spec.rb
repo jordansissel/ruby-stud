@@ -1,5 +1,6 @@
 require "stud/buffer"
 require "spec_env" # from the top level spec/ directory
+Thread.abort_on_exception = true
 
 class BufferSubject
   include Stud::Buffer
@@ -58,7 +59,7 @@ describe Stud::Buffer do
       subject.buffer_state[:pending_count] = 5
       subject.buffer_state[:pending_items][nil] = [1,2,3,4,5]
 
-      subject.should_receive(:flush).with([1,2,3,4,5])
+      subject.should_receive(:flush).with([1,2,3,4,5], nil)
 
       start = Time.now
       subject.buffer_receive(6)
