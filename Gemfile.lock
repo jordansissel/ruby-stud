@@ -1,13 +1,23 @@
 PATH
   remote: .
   specs:
-    stud (0.0.7)
+    stud (0.0.14)
+      ffi
+      metriks
 
 GEM
   remote: http://rubygems.org/
   specs:
+    atomic (1.1.9)
+    avl_tree (1.1.3)
     diff-lcs (1.1.3)
+    ffi (1.9.0)
+    hitimes (1.2.1)
     insist (0.0.5)
+    metriks (0.9.9.4)
+      atomic (~> 1.0)
+      avl_tree (~> 1.1.2)
+      hitimes (~> 1.1)
     rspec (2.10.0)
       rspec-core (~> 2.10.0)
       rspec-expectations (~> 2.10.0)
