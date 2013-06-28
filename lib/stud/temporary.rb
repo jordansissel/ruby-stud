@@ -1,15 +1,15 @@
 require "securerandom" # for uuid generation
-require "stud/with"
 require "fileutils"
 
 module Stud
   module Temporary
-    include Stud::With
+    DEFAULT_PREFIX = "studtmp"
 
     # Returns a string for a randomly-generated temporary path.
     #
     # This does not create any files.
-    def pathname(prefix="")
+    def pathname(prefix=DEFAULT_PREFIX)
+
       root = ENV["TMP"] || ENV["TMPDIR"] || ENV["TEMP"] || "/tmp"
       return File.join(root, "#{prefix}-#{SecureRandom.uuid}")
     end
@@ -20,19 +20,17 @@ module Stud
     # given to File.new.
     #
     # If no file args are given, the default file mode is "w+"
-    def file(prefix="", *args, &block)
+    def file(prefix=DEFAULT_PREFIX, *args, &block)
       args << "w+" if args.empty?
+      file = File.new(pathname(prefix), *args)
       if block_given?
-        with(File.new(pathname(prefix), *args)) do |fd|
-          begin
-            block.call(fd)
-            fd.close
-          ensure
-            File.unlink(fd.path)
-          end
+        begin
+          block.call(file)
+        ensure
+          File.unlink(file.path)
         end
       else
-        return File.new(pathname(prefix), *args)
+        return file
       end
     end
 
@@ -43,7 +41,7 @@ module Stud
     #
     # If no block given, it will return the path to a newly created directory.
     # You are responsible for then cleaning up.
-    def directory(prefix="", &block)
+    def directory(prefix=DEFAULT_PREFIX, &block)
       path = pathname(prefix)
       Dir.mkdir(path)
 
