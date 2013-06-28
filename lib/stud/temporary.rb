@@ -1,8 +1,11 @@
 require "securerandom" # for uuid generation
+require "stud/with"
 require "fileutils"
 
 module Stud
   module Temporary
+    include Stud::With
+
     # Returns a string for a randomly-generated temporary path.
     #
     # This does not create any files.
@@ -19,7 +22,18 @@ module Stud
     # If no file args are given, the default file mode is "w+"
     def file(prefix="", *args, &block)
       args << "w+" if args.empty?
-      return File.new(pathname(prefix), *args)
+      if block_given?
+        with(File.new(pathname(prefix), *args)) do |fd|
+          begin
+            block.call(fd)
+            fd.close
+          ensure
+            File.unlink(fd.path)
+          end
+        end
+      else
+        return File.new(pathname(prefix), *args)
+      end
     end
 
     # Make a temporary directory.
@@ -34,14 +48,17 @@ module Stud
       Dir.mkdir(path)
 
       if block_given?
-        block.call(path)
-        FileUtils.rm_r(path)
+        begin
+          block.call(path)
+        ensure
+          FileUtils.rm_r(path)
+        end
       else
         return path
       end
     end
+    extend self
   end # module Temporary
 
-  extend self
 end # module Stud
 
