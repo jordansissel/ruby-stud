@@ -52,6 +52,12 @@ module Stud
   # 'id' is the value returned by a previous Stud.trap() call
   def self.untrap(signal, id)
     @traps[signal].delete_if { |block| block.object_id == id }
+
+    # Restore the default handler if there are no custom traps anymore.
+    if @traps[signal].empty?
+      @traps.delete(signal)
+      Signal::trap(signal, "DEFAULT")
+    end
   end # def self.untrap
 end # module Stud
 
