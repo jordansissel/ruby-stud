@@ -11,7 +11,7 @@ module Stud
     def pathname(prefix=DEFAULT_PREFIX)
 
       root = ENV["TMP"] || ENV["TMPDIR"] || ENV["TEMP"] || "/tmp"
-      return File.join(root, "#{prefix}-#{SecureRandom.uuid}")
+      return File.join(root, "#{prefix}-#{SecureRandom.hex(30)}")
     end
 
     # Return a File handle to a randomly-generated path.
