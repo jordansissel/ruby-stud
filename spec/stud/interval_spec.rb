@@ -3,8 +3,8 @@ require "spec_env" # from the top level spec/ directory
 
 describe Stud do
   describe "#interval" do
-    let(:interval) { 5 }
-    it "Allow the interval to sleep before running the block" do
+    let(:interval) { 1 }
+    it "allows the interval to sleep before running" do
       start_time = Time.now
 
       Stud.interval(interval, :sleep_than_run => true) do
@@ -22,6 +22,21 @@ describe Stud do
         expect(end_time - start_time).to be < interval
         break
       end
+    end
+
+    it 'should be able to interrupt an interval defined as a task' do
+      counter = 0
+
+      task = Stud::Task.new do
+        Stud.interval(0.5) do
+          counter += 1
+          task.stop!
+        end
+      end
+
+      sleep(1)
+
+      expect(counter).to eq(1)
     end
   end
 end

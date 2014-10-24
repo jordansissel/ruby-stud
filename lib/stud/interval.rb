@@ -1,3 +1,4 @@
+require "stud/task"
 module Stud
   # This implementation tries to keep clock more accurately.
   # Prior implementations still permitted skew, where as this one
@@ -8,6 +9,7 @@ module Stud
   def self.interval(time, opts = {}, &block)
     start = Time.now
     while true
+      break if Task.interrupted?
       if opts[:sleep_than_run]
         start = sleep_for_interval(time, start)
         block.call

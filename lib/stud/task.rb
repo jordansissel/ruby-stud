@@ -28,5 +28,13 @@ module Stud
         return result
       end
     end # def wait
+
+    def stop!
+      Thread.current[:stud_task_interrupted] = true
+    end
+
+    def self.interrupted?
+      Thread.current[:stud_task_interrupted]
+    end
   end # class Task
 end # module Stud
