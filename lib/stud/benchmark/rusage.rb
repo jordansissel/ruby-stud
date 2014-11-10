@@ -4,7 +4,7 @@ module Stud
   module Benchmark
     module LibC
       extend FFI::Library
-      ffi_lib "libc.so.6"
+      ffi_lib ["libc.so.6", "libc"]
 
       attach_function :getrusage, [:int, :pointer], :int
     end
