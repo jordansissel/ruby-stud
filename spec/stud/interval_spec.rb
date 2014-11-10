@@ -7,7 +7,7 @@ describe Stud do
     it "allows the interval to sleep before running" do
       start_time = Time.now
 
-      Stud.interval(interval, :sleep_than_run => true) do
+      Stud.interval(interval, :sleep_then_run => true) do
         end_time = Time.now
         expect(end_time - start_time).to be >= interval
         break

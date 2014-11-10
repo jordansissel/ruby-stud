@@ -10,7 +10,7 @@ module Stud
     start = Time.now
     while true
       break if Task.interrupted?
-      if opts[:sleep_than_run]
+      if opts[:sleep_then_run]
         start = sleep_for_interval(time, start)
         block.call
       else
