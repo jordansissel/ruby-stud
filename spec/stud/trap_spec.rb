@@ -3,8 +3,11 @@ require "stud/try"
 require "spec_env" # from the top level spec/ directory
 require "timeout"
 
-describe "Stud#trap" do
+def windows?
+  ["mingw32", "mswin32"].include?(RbConfig::CONFIG["host_os"])
+end
 
+describe "Stud#trap", :if => !windows? do
   it "should call multiple traps for a single signal" do
     queue = Queue.new
     Stud.trap("USR2") { queue << 1 }
