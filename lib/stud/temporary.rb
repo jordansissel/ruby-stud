@@ -27,6 +27,7 @@ module Stud
         begin
           block.call(file)
         ensure
+          file.close unless file.closed?
           File.unlink(file.path)
         end
       else
