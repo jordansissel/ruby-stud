@@ -4,7 +4,7 @@ module Stud
   #
   # Implements a generic framework for accepting events which are later flushed
   # in batches. Flushing occurs whenever +:max_items+ or +:max_interval+ (seconds)
-  # has been reached or if the event size will outgrows +:flush_each+ (bytes)
+  # has been reached or if the event size outgrows +:flush_each+ (bytes)
   #
   # Including class must implement +flush+, which will be called with all
   # accumulated items either when the output buffer fills (+:max_items+ or
@@ -128,10 +128,9 @@ module Stud
     # buffer_receive calls will block while <code>buffer_full? == true</code>.
     #
     # @return [bool] Is the buffer full?
-    def buffer_full?(event_volume=0)
-      size = @buffer_state[:pending_size] + @buffer_state[:outgoing_size]
+    def buffer_full?
       (@buffer_state[:pending_count] + @buffer_state[:outgoing_count] >= @buffer_config[:max_items]) || \
-      (@buffer_config[:flush_each] != 0 && size != 0 && (size + event_volume > @buffer_config[:flush_each]))
+      (@buffer_config[:flush_each] != 0 && @buffer_state[:pending_size] + @buffer_state[:outgoing_size] >= @buffer_config[:flush_each])
     end
 
     # Save an event for later delivery
@@ -149,21 +148,18 @@ module Stud
     def buffer_receive(event, group=nil)
       buffer_initialize if ! @buffer_state
 
-      event_volume = @buffer_config[:flush_each] == 0 ? 0 : var_size(event)
-
       # block if we've accumulated too many events
-      while buffer_full?(event_volume) do
+      while buffer_full? do
         on_full_buffer_receive(
           :pending => @buffer_state[:pending_count],
           :outgoing => @buffer_state[:outgoing_count]
         ) if @buffer_config[:has_on_full_buffer_receive]
         sleep 0.1
       end
-
       @buffer_state[:pending_mutex].synchronize do
         @buffer_state[:pending_items][group] << event
         @buffer_state[:pending_count] += 1
-        @buffer_state[:pending_size] += event_volume
+        @buffer_state[:pending_size] += var_size(event) if @buffer_config[:flush_each] != 0
       end
 
       buffer_flush
@@ -217,7 +213,6 @@ module Stud
           @buffer_state[:outgoing_size] = @buffer_state[:pending_size]
           buffer_clear_pending
         end
-
         @buffer_config[:logger].debug("Flushing output",
           :outgoing_count => @buffer_state[:outgoing_count],
           :time_since_last_flush => time_since_last_flush,
@@ -249,7 +244,6 @@ module Stud
             items_flushed += events_size
 
           rescue => e
-
             @buffer_config[:logger].warn("Failed to flush outgoing items",
               :outgoing_count => @buffer_state[:outgoing_count],
               :exception => e,
