@@ -25,6 +25,8 @@ module Stud
 
     BACKOFF_SCHEDULE = [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1.28, 2.0]
 
+    DEFAULT_CATCHABLE_EXCEPTIONS = [StandardError]
+
     # Log a failure.
     #
     # You should override this method if you want a better logger.
@@ -51,6 +53,8 @@ module Stud
     #   that number of times. If this value is omitted or nil, we will try until
     #   success with no limit on the number of tries.
     #
+    # exceptions - the type of exceptions to retry, we use `StandardError` by default.
+    #
     # Returns the return value of the block once the block succeeds.
     # Raises the last seen exception if we run out of tries.
     #
@@ -69,7 +73,7 @@ module Stud
     #
     #   # Try forever
     #   return_value = try { ... }
-    def try(enumerable=FOREVER, &block)
+    def try(enumerable=FOREVER, exceptions=DEFAULT_CATCHABLE_EXCEPTIONS, &block)
       if block.arity == 0
         # If the block takes no arguments, give none
         procedure = lambda { |val| return block.call }
@@ -92,7 +96,7 @@ module Stud
         rescue NoMethodError, NameError
           # Abort immediately on exceptions that are unlikely to recover.
           raise
-        rescue => exception
+        rescue *exceptions => exception
           last_exception = exception
           fail_count += 1
 
@@ -115,8 +119,8 @@ module Stud
 
   TRY = Try.new
   # A simple try method for the common case.
-  def try(enumerable=Stud::Try::FOREVER, &block)
-    return TRY.try(enumerable, &block)
+  def try(enumerable=Stud::Try::FOREVER, exceptions=Try::DEFAULT_CATCHABLE_EXCEPTIONS, &block)
+    return TRY.try(enumerable, exceptions, &block)
   end # def try
 
   extend self

@@ -2,6 +2,9 @@ require "stud/try"
 require "spec_env" # from the top level spec/ directory
 
 class FakeFailure < StandardError; end
+class DummyException < Exception; end
+class OtherException < Exception; end
+class RetryableException < Exception; end
 
 describe Stud::Try do
   class FastTry < Stud::Try
@@ -73,5 +76,50 @@ describe Stud::Try do
     insist do
       Stud.try(3.times) { raise FakeFailure }
     end.raises(FakeFailure)
+  end
+
+  context "when specifying exceptions" do
+    let(:total) { 5 }
+
+    it "allows to specify retryable exceptions" do
+      count = 0
+      insist do
+        Stud.try(total.times, DummyException) do
+          count += 1
+          raise DummyException
+        end
+      end.raises(DummyException)
+
+      insist { count } == total
+    end
+
+    it "You can specify a list" do
+      count = 0
+
+      insist do
+        Stud.try(total.times, [DummyException, RetryableException]) do
+          count += 1
+          if count < 2
+            raise DummyException
+          else
+            raise RetryableException
+          end
+        end
+      end.raises(RetryableException)
+
+      insist { count } == total
+    end
+
+    it "doesnt retry if the exception is not in the list" do
+      count = 0
+      insist do
+        Stud.try(total.times, DummyException) do
+          count += 1
+          raise RetryableException
+        end
+      end.raises(RetryableException)
+
+      insist { count } == 1
+    end
   end
 end
