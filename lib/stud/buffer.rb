@@ -230,7 +230,7 @@ module Stud
 
             @buffer_config[:logger].warn("Failed to flush outgoing items",
               :outgoing_count => @buffer_state[:outgoing_count],
-              :exception => e,
+              :exception => e.class.name,
               :backtrace => e.backtrace
             ) if @buffer_config[:logger]
 
