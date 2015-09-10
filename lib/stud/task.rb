@@ -36,5 +36,14 @@ module Stud
     def self.interrupted?
       Thread.current[:stud_task_interrupted]
     end
+
+    def wakeup
+      @thread.wakeup
+    end
+
+    def status
+      @thread.status
+    end
+
   end # class Task
 end # module Stud

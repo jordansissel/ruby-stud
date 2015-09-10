@@ -38,5 +38,21 @@ describe Stud do
 
       expect(counter).to eq(1)
     end
+
+    it 'should be able to wake up from an sleep' do
+      counter = 0
+
+      task = Stud::Task.new do
+        Stud.interval(2) do
+          counter += 1
+        end
+      end
+      task.stop!
+      sleep(0.5)
+      expect(task.status).to eq("sleep")
+      task.wakeup
+      expect(task.status).to eq("run")
+      expect(counter).to eq(1)
+    end
   end
 end
