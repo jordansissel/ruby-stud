@@ -60,7 +60,7 @@ describe Stud::Buffer do
       subject.buffer_state[:pending_count] = 5
       subject.buffer_state[:pending_items][nil] = [1,2,3,4,5]
 
-      subject.should_receive(:flush).with([1,2,3,4,5], nil)
+      expect(subject).to receive(:flush).with([1,2,3,4,5], nil)
 
       start = Time.now
       subject.buffer_receive(6)
@@ -73,7 +73,7 @@ describe Stud::Buffer do
       subject = BufferSubject.new(:max_interval => 10, :max_items => 5)
 
       # flushes are slow this time.
-      subject.stub(:flush) { sleep 4 }
+      allow(subject).to receive(:flush) { sleep(4) }
 
       subject.buffer_receive(1)
       subject.buffer_receive(2)
@@ -150,7 +150,7 @@ describe Stud::Buffer do
     it "should accept new items to pending list" do
       subject = BufferSubject.new(:max_items => 2)
 
-      subject.should_receive(:flush).with(['something', 'something else'], nil)
+      expect(subject).to receive(:flush).with(['something', 'something else'], nil)
 
       subject.buffer_receive('something')
       subject.buffer_receive('something else')
@@ -160,8 +160,8 @@ describe Stud::Buffer do
       subject = BufferSubject.new(:max_items => 2)
 
       # we get 2 flush calls, one for each key
-      subject.should_receive(:flush).with(['something'], 'key1', nil)
-      subject.should_receive(:flush).with(['something else'], 'key2', nil)
+      expect(subject).to receive(:flush).with(['something'], 'key1', nil)
+      expect(subject).to receive(:flush).with(['something else'], 'key2', nil)
 
       subject.buffer_receive('something', 'key1')
       subject.buffer_receive('something else', 'key2')
@@ -170,8 +170,8 @@ describe Stud::Buffer do
     it "should accept non-string grouping keys" do
       subject = BufferSubject.new(:max_items => 2)
 
-      subject.should_receive(:flush).with(['something'], {:key => 1, :foo => :yes}, nil)
-      subject.should_receive(:flush).with(['something else'], {:key => 2, :foo => :no}, nil)
+      expect(subject).to receive(:flush).with(['something'], {:key => 1, :foo => :yes}, nil)
+      expect(subject).to receive(:flush).with(['something else'], {:key => 2, :foo => :no}, nil)
 
       subject.buffer_receive('something', :key => 1, :foo => :yes)
       subject.buffer_receive('something else', :key => 2, :foo => :no)
@@ -185,11 +185,11 @@ describe Stud::Buffer do
       error = RuntimeError.new("blah!")
 
       # first flush will raise an exception
-      subject.should_receive(:flush).and_raise(error)
+      expect(subject).to receive(:flush).and_raise(error)
       # which will be passed to on_flush_error
-      subject.should_receive(:on_flush_error).with(error)
+      expect(subject).to receive(:on_flush_error).with(error)
       # then we'll retry and succeed. (w/o this we retry forever)
-      subject.should_receive(:flush)
+      expect(subject).to receive(:flush)
 
       subject.buffer_receive('item')
     end
@@ -204,9 +204,9 @@ describe Stud::Buffer do
       subject.buffer_initialize(:max_items => 1)
 
       # first flush will raise an exception
-      subject.should_receive(:flush).and_raise("boom!")
+      expect(subject).to receive(:flush).and_raise("boom!")
       # then we'll retry and succeed. (w/o this we retry forever)
-      subject.should_receive(:flush)
+      expect(subject).to receive(:flush)
 
       subject.buffer_receive('item')
     end
