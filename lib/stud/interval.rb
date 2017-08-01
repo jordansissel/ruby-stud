@@ -41,7 +41,12 @@ module Stud
   def self.stop!(target = Thread.current)
     # setting/getting threalocal var is thread safe in JRuby
     target[STUD_STOP_REQUESTED] = true
-    target.wakeup
+    begin
+      target.wakeup
+    rescue ThreadError => e
+      # The thread is dead, so there's nothing to do. 
+      # There's no race-free way to detect this sadly
+    end
     nil
   end
 

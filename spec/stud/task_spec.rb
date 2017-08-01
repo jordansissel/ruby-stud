@@ -30,5 +30,20 @@ describe Stud::Task do
       insist { task.stop? } == true
       insist { Time.now - start_time } < 2
     end
+
+    it "should not error stopping twice" do
+      task = Stud::Task.new do
+        sleep 100
+        Stud.stop?
+      end
+
+      sleep 1
+
+      task.stop!
+
+      expect do
+        task.stop!
+      end.not_to raise_error()
+    end
   end
 end
