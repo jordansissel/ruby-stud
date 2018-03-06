@@ -4,6 +4,20 @@ require "spec_env" # from the top level spec/ directory
 describe Stud::Temporary do
   include Stud::Temporary # make these methods available in scope
 
+  describe "#temp_root" do
+    it "should return a string" do
+      insist { temp_root }.is_a?(String)
+    end
+
+    it "should respect TMP" do
+      old = ENV["TMP"]
+      ENV["TMP"] = "/pants"
+      # Make sure the root was changed to /pants
+      insist { temp_root } == ENV["TMP"]
+      ENV["TMP"] = old
+    end
+  end
+
   describe "#pathname" do
     it "should return a string" do
       insist { pathname }.is_a?(String)
