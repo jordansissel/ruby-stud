@@ -5,12 +5,16 @@ module Stud
   module Temporary
     DEFAULT_PREFIX = "studtmp"
 
+    # Returns the temporary directory used in pathname
+    def temp_root
+      ENV["TMP"] || ENV["TMPDIR"] || ENV["TEMP"] || "/tmp"
+    end
+
     # Returns a string for a randomly-generated temporary path.
     #
     # This does not create any files.
     def pathname(prefix=DEFAULT_PREFIX)
-
-      root = ENV["TMP"] || ENV["TMPDIR"] || ENV["TEMP"] || "/tmp"
+      root = temp_root
       return File.join(root, "#{prefix}-#{SecureRandom.hex(30)}")
     end
 
