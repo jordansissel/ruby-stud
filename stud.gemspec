@@ -4,7 +4,8 @@ Gem::Specification.new do |spec|
   spec.summary = "stud - common code techniques"
   spec.description = "small reusable bits of code I'm tired of writing over " \
     "and over. A library form of my software-patterns github repo."
-
+  spec.license     = 'Apache License 2.0'
+  
   files = []
   dirs = %w{lib}
   dirs.each do |dir|
